@@ -4,3 +4,6 @@ ultralytics
 opencv-python
 numpy
 Pillow
+flask
+gunicorn
+torch
