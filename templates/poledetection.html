@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Image Anomaly Detection — Template</title>
+  <style>
+    :root{
+      --bg:#f6f8fb; --card:#fff; --muted:#6b7280; --accent:#7a6eab; 
+      --danger:#ff6b6b; --glass: rgba(255,255,255,0.6);
+      --btn-bg:#e5e7eb;          
+    --btn-text:#111827;        
+    --btn-border:#cbd5e1; 
+    }
+    [data-theme="dark"]{ --bg:#0b1220; --card:#32373f; --muted:#9aa4b2; 
+        --accent:#7a6eab; --danger:#ff7b7b; --glass: rgba(255,255,255,0.03); color:#e6eef8;
+        --btn-bg:#2a3244;          
+        --btn-text:#e6eef8;        
+        --btn-border:#3c465b;       }
+
+    *{box-sizing:border-box}
+    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial; margin:0; background:var(--bg); color:inherit; -webkit-font-smoothing:antialiased}
+    .app{max-width:1100px; margin:28px auto; padding:20px}
+
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    /* .brand{display:flex;align-items:center;gap:12px} */
+    .brand {
+        display: flex;
+        flex-direction: row;   /* keep logo + text in a line */
+        align-items: center;   /* vertically centered */
+        justify-content: center;  /* <-- centers the whole block */
+        gap: 14px;
+        text-align: center;    /* centers h1 + p text */
+        width: 100%;
+        margin: 20px 0;
+    }
+
+    .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#00d4ff);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;box-shadow:0 6px 18px rgba(16,24,40,0.06)}
+    h1{margin:0;font-size:18px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .controls{display:flex;gap:10px;align-items:center}
+    .icon-btn{background:var(--btn-bg);border:1px solid rgba(0,0,0,0.04);padding:8px 10px;border-radius:999px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;box-shadow:0 4px 14px var(--glass); color: var(--btn-text);}
+    .icon-btn .emoji{font-size:16px}
+
+    /* Drop zone */
+    .drop{border:2px dashed rgba(99,102,241,0.25);background:linear-gradient(180deg,transparent,var(--glass));padding:22px;border-radius:12px;display:flex;gap:18px;align-items:center}
+    .drop.dragover{border-color:var(--accent);transform:translateY(-2px)}
+    .drop .chooser{flex:1;display:flex;align-items:center;gap:14px}
+    .drop .chooser .icon{width:68px;height:68px;border-radius:12px;background:linear-gradient(180deg,#fff, skyblue);display:flex;align-items:center;justify-content:center;font-size:26px}
+    .drop .chooser .text{line-height:1}
+    .drop .chooser .text strong{display:block}
+    .drop small{color:var(--muted)}
+    input[type=file]{display:none}
+
+    /* uploaded images */
+    .uploaded-area{margin-top:16px;display:flex;flex-direction:column;gap:12px}
+    .u-actions{display:flex;justify-content:space-between;align-items:center}
+    /* .toggle-link{font-size:13px;color:var(--muted);cursor:pointer} */
+    .toggle-link {
+        font-size:13px;
+        color:var(--accent);
+        cursor:pointer;
+        font-weight:600;
+        text-decoration:underline;
+        transition: color 0.2s;
+        }
+        .toggle-link:hover {
+        color: #ff6b6b;
+        }
+
+
+    .thumbs{display:flex;gap:10px;flex-wrap:wrap}
+    .thumb{width:84px;height:84px;border-radius:8px;background:var(--card);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;border:1px solid rgba(0,0,0,0.04)}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .thumb .fname{position:absolute;left:6px;right:6px;bottom:6px;font-size:10px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.35));color:#fff;padding:2px 6px;border-radius:6px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+    .thumb .mini-toggle{display:none;top:6px;right:6px;background:rgba(0,0,0,0.5);color:#fff;border-radius:999px;padding:4px;font-size:12px;cursor:pointer}
+
+    /* run detection area */
+    .run-area{margin-top:18px;display:flex;gap:16px}
+    .panel{flex:1;background:var(--card);padding:14px;border-radius:12px;border:1px solid rgba(0,0,0,0.04)}
+    .panel h3{margin:0 0 10px 0;font-size:14px}
+    /* .run-btn{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#00d4ff);color:#fff;border:none;cursor:pointer;font-weight:600} */
+
+    .run-center {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+  }
+
+  .run-cute-btn {
+      padding: 10px 22px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.25s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  }
+
+  .run-cute-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+  }
+  /* spinner styling */
+  /* Spinner */
+.spinner {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #007bff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5000;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+
+  /* Table preview */
+    .table-preview {
+      width: 72px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;   /* hand cursor */
+      transition: 0.2s;
+  }
+
+  .table-preview:hover {
+      transform: scale(1.05);
+  }
+
+
+[data-theme="dark"] .run-cute-btn {
+    background: #7b5cff;
+}
+
+[data-theme="dark"] .run-btn {
+    background: linear-gradient(45deg, #7b5cff, #9270ff);
+}
+
+    /* annotated gallery */
+    .annotated{display:flex;gap:10px;flex-wrap:wrap}
+    .annot-card{width:120px;height:84px;border-radius:8px;overflow:hidden;position:relative;border:1px solid rgba(0,0,0,0.05)}
+    .annot-card img{width:100%;height:100%;object-fit:cover}
+
+    /* table */
+    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+    thead{background:transparent}
+    th,td{padding:8px 10px;text-align:left;border-bottom:1px solid rgba(0,0,0,0.04)}
+    td.preview{width:80px}
+    .badge{display:inline-block;padding:6px 8px;border-radius:10px;font-size:12px}
+    .badge.alert{background:linear-gradient(90deg,var(--danger),#ffa3a3);color:#fff; cursor: pointer;}
+    .badge.ok{background:#e6f7ff;color:#034d6b; cursor: pointer;}
+    
+    /* to hide the table headers */
+    .hidden {
+      display: none;
+    }
+    /* Full-page blur background */
+    .blur-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        backdrop-filter: blur(6px);
+        background: rgba(0,0,0,0.25);
+        z-index: 4000; /* should be behind spinner but above page */
+    }
+
+    /* Reuse hidden class */
+    .hidden {
+        display: none !important;
+    }
+
+
+
+
+
+    /* modal */
+    /* .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.55);z-index:60}
+    .modal .card{max-width:900px;width:90%;height:auto;padding:18px}
+    .modal img{max-width:100%;height:auto;border-radius:6px}
+    .modal.show{display:flex} */
+
+    /* modal background */
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    /* show class */
+    .modal.show {
+      display: flex;
+    }
+
+    /* modal content card */
+    /* .modal .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 90%;
+      max-height: 90%;
+      display: flex;
+      flex-direction: column;
+    } */
+
+    /* enlarged image */
+    #modalImg {
+      max-width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+
+    /* responsive */
+    @media (max-width:760px){.run-area{flex-direction:column}.annot-card{width:100%}}
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">IA</div>
+        <div>
+          <h1>Image Anomaly Detector</h1>
+          <!-- <p class="lead">Upload images → Run detection → View annotated results & table</p> -->
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="icon-btn" id="themeToggle" title="Toggle theme"><span class="emoji">🌙</span></button>
+        <!-- <button class="icon-btn" id="downloadSample" title="Download sample">📁 Sample</button> -->
+      </div>
+    </div>
+
+    <label class="drop" id="dropzone">
+      <div class="chooser">
+        <div class="icon">📷</div>
+        <div class="text">
+          <strong>Choose images</strong>
+          <div style="font-size:13px;color:var(--muted)"></div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <!-- <small class="muted">or</small> -->
+        <br>
+        <button class="icon-btn" id="chooseBtn">Choose files</button>
+        <input type="file" id="fileInput" accept="image/*" multiple />
+      </div>
+    </label>
+
+    <div class="uploaded-area" id="uploadedArea" style="display:none">
+      <div class="u-actions">
+        <div class="muted">Uploaded images</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="toggle-link" id="hideToggle">Hide Uploaded Images</div>
+          <button class="icon-btn" id="clearBtn" title="Clear all">🗑 Clear</button>
+        </div>
+      </div>
+
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+
+    <div class="run-center">
+        <button id="runBtn" class="run-cute-btn">🔍 Run Detection</button>
+        <div id="spinner" class="spinner hidden"></div>
+        <div id="blurOverlay" class="blur-overlay hidden"></div>
+
+    </div>
+
+    <!-- Status -->
+    <div id="status" class="muted" style="text-align:center; margin-bottom:20px;">
+        
+    </div>
+    <div id="resultsWrapper" class="hidden">
+    <div class="run-area">
+
+      <div class="panel">
+        <h3>Results Table</h3>
+        <div style="overflow:auto">
+          <table id="resultsTable">
+            <thead>
+              <tr><th>S.No</th><th>Preview</th><th>Filename</th><th>Anomaly Reason</th><th>Alert</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div>
+
+  </div>
+
+  <!-- modal for enlarged image -->
+  <div class="modal" id="modal">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong id="modalFilename"></strong>
+        <button class="icon-btn" id="closeModal">Close</button>
+      </div>
+      <img id="modalImg" src="" alt="enlarged" />
+    </div>
+  </div>
+
+  <script>
+    // Utilities & state
+    const app = document.getElementById('app');
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const chooseBtn = document.getElementById('chooseBtn');
+    const thumbs = document.getElementById('thumbs');
+    const uploadedArea = document.getElementById('uploadedArea');
+    const hideToggle = document.getElementById('hideToggle');
+    const clearBtn = document.getElementById('clearBtn');
+    const runBtn = document.getElementById('runBtn');
+    const status = document.getElementById('status');
+    const annotated = document.getElementById('annotated');
+    const resultsTable = document.querySelector('#resultsTable tbody');
+    const modal = document.getElementById('modal');
+    const modalImg = document.getElementById('modalImg');
+    const modalFilename = document.getElementById('modalFilename');
+    const closeModal = document.getElementById('closeModal');
+    const themeToggle = document.getElementById('themeToggle');
+    const spinner = document.getElementById("spinner");
+    const blurOverlay = document.getElementById("blurOverlay");
+
+    let files = [];
+
+    // Theme
+    function applyTheme(theme){
+      if(theme==='dark') document.documentElement.setAttribute('data-theme','dark');
+      else document.documentElement.removeAttribute('data-theme');
+      themeToggle.querySelector('.emoji').textContent = theme==='dark' ? '☀️' : '🌙';
+      localStorage.setItem('iap_theme',theme);
+    }
+    themeToggle.addEventListener('click',()=>{
+      const cur = localStorage.getItem('iap_theme') || 'light';
+      applyTheme(cur==='dark' ? 'light' : 'dark');
+    });
+    (function initTheme(){
+      // const t = localStorage.getItem('iap_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark':'light');
+      const t = localStorage.getItem('iap_theme') || 'dark';
+      applyTheme(t);
+    })();
+
+    // drag/drop
+    ;['dragenter','dragover','dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev,e=>e.preventDefault()));
+    ;['dragenter','dragover'].forEach(ev=>dropzone.addEventListener(ev,()=>dropzone.classList.add('dragover')));
+    ;['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev,()=>dropzone.classList.remove('dragover')));
+    dropzone.addEventListener('drop',e=>{
+      const dt = e.dataTransfer; if(!dt) return;
+      const dropped = Array.from(dt.files).filter(f=>f.type.startsWith('image/'));
+      handleFiles(dropped);
+    });
+
+    chooseBtn.addEventListener('click',()=>fileInput.click());
+    fileInput.addEventListener('change',e=>handleFiles(Array.from(e.target.files)));
+
+    function handleFiles(list){
+      if(!list || !list.length) return;
+      status.textContent = "";
+      list.forEach(f=>{
+        // allow duplicate names but store unique id
+        const id = Math.random().toString(36).slice(2,9);
+        const entry = {id, file:f, url:URL.createObjectURL(f), name:f.name};
+        files.push(entry);
+      });
+      renderThumbs();
+      uploadedArea.style.display = files.length ? 'block' : 'none';
+    }
+
+    function renderThumbs(){
+      thumbs.innerHTML = '';
+      files.forEach((it,idx)=>{
+        const d = document.createElement('div'); d.className='thumb'; d.dataset.id = it.id;
+        const img = document.createElement('img'); img.src = it.url; img.alt = it.name; d.appendChild(img);
+        const fname = document.createElement('div'); fname.className='fname'; fname.textContent = it.name; d.appendChild(fname);
+        const tbtn = document.createElement('div'); tbtn.className='mini-toggle'; tbtn.textContent='👁';
+        tbtn.title = 'Hide/Show from detection';
+        tbtn.addEventListener('click',ev=>{
+          ev.stopPropagation(); d.classList.toggle('muted'); // visual marker but we still keep file
+          if(d.classList.contains('muted')) tbtn.textContent='🙈'; else tbtn.textContent='👁';
+        });
+        d.appendChild(tbtn);
+
+        d.addEventListener('click',()=>openModal(it.url,it.name));
+        thumbs.appendChild(d);
+      });
+    }
+
+    hideToggle.addEventListener('click',()=>{
+      if(thumbs.style.display === 'none'){thumbs.style.display='flex'; hideToggle.textContent='Hide Uploaded Images';}
+      else {thumbs.style.display='none'; hideToggle.textContent='Show Uploaded Images';}
+    });
+
+    clearBtn.addEventListener('click',()=>{
+      files.forEach(f=>URL.revokeObjectURL(f.url)); files=[]; thumbs.innerHTML=''; uploadedArea.style.display='none'; resultsTable.innerHTML='';
+    });
+
+    // run detection ---------    
+
+
+    runBtn.addEventListener('click', async () => {
+        if (!files.length) {
+            status.textContent = 'No images to analyze';
+            return;
+        }
+        status.textContent = ''; 
+
+        //status.textContent = 'Processing...';
+        // annotated.innerHTML = '';
+        resultsTable.innerHTML = '';
+
+        spinner.classList.remove("hidden");
+        blurOverlay.classList.remove("hidden");
+
+
+        // prepare formdata
+        const formData = new FormData();
+        const activeFiles = [];
+
+        files.forEach(f => {
+            const thumbEl = thumbs.querySelector(`[data-id="${f.id}"]`);
+            const hidden = thumbEl && thumbEl.classList.contains('muted');
+            if (!hidden) {
+                formData.append("files", f.file);
+                activeFiles.push(f);
+            }
+        });
+
+    formData.append("detection_type", "both");
+
+    try {
+        const res = await fetch("http://127.0.0.1:5005/predict", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        // annotated.innerHTML = '';
+        resultsTable.innerHTML = '';
+
+        data.results.forEach((item, index) => {
+            // annotated preview
+            const card = document.createElement("div");
+            card.className = "annot-card";
+            const img = document.createElement("img");
+            img.src = item.preview_original;  // base64 annotated image
+            img.alt = item.name;
+            // card.appendChild(img);
+            // card.addEventListener("click", () => openModal(item.preview, item.name));
+            // annotated.appendChild(card);
+
+            // add table row
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td class="preview">
+                    <img src="${item.preview}" 
+                        class="table-preview"
+                        onclick="openModal('${item.preview}', '${item.name}')">
+                </td>
+                <td>${item.name}</td>
+                <td>${item.reason}</td>
+                <td>
+                  ${item.anomaly 
+                    ? `<span class="badge alert" onclick="alert('Alert Reason: ${item.reason}')">Alert</span>`
+                    : `<span class="badge ok">OK</span>`}
+                </td>
+            `;
+
+            resultsTable.appendChild(tr);
+        });
+
+        //status.textContent = "Done — results ready";
+
+        document.getElementById("resultsWrapper").classList.remove("hidden");
+
+
+    } catch (err) {
+        console.error(err);
+        status.textContent = "Error contacting backend";
+        alert("Error: Unable to reach backend");
+    }
+    spinner.classList.add("hidden");
+    blurOverlay.classList.add("hidden");
+});
+
+
+    async function makeAnnotated(fileEntry){
+      return new Promise((res,rej)=>{
+        const img = new Image(); img.crossOrigin='anonymous'; img.onload = ()=>{
+          const w = Math.min(640, img.width);
+          const h = Math.round(img.height * (w / img.width));
+          const c = document.createElement('canvas'); c.width = w; c.height = h; const ctx = c.getContext('2d');
+          // draw original
+          ctx.drawImage(img,0,0,w,h);
+          // draw a rounded translucent badge
+          ctx.fillStyle = 'rgba(255,110,110,0.18)'; ctx.fillRect(0, h-36, w, 36);
+          // draw label
+          ctx.fillStyle = 'white'; ctx.font = '14px system-ui'; ctx.fillText('ANOMALY', 12, h-14);
+          // draw random red box as fake annotation
+          ctx.strokeStyle = 'rgba(255,90,90,0.9)'; ctx.lineWidth = 3; ctx.strokeRect(w*0.12, h*0.12, w*0.5, h*0.5);
+          const data = c.toDataURL('image/jpeg',0.85);
+          res(data);
+        };
+        img.onerror = rej;
+        img.src = fileEntry.url;
+      });
+    }
+
+    // modal
+    function openModal(src,name){ modalImg.src = src; modalFilename.textContent = name; modal.classList.add('show'); }
+    closeModal.addEventListener('click',()=>modal.classList.remove('show'));
+    modal.addEventListener('click',e=>{ if(e.target===modal) modal.classList.remove('show'); });
+
+
+    // accessibility: keyboard closing
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape') modal.classList.remove('show'); });
+
+    // clean up object URLs on unload
+    window.addEventListener('beforeunload',()=>{ files.forEach(f=>URL.revokeObjectURL(f.url)); });
+
+  </script>
+</body>
+</html>
