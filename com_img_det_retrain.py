@@ -36,13 +36,32 @@ RETRAIN_META = os.path.join(RETRAIN_FOLDER, "metadata.csv")
 # -------------------------
 # LOAD SINGLE COMBINED MODEL
 # -------------------------
-try:
-    combined_model_path = "runs/pole_fire_wire/best_pole_fire_wire.pt"
-    model = YOLO(combined_model_path)
-    print("Unified YOLOv8 model loaded successfully.")
-except Exception as e:
-    print(f"Error loading combined model: {e}")
-    model = None
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+combined_model_path = os.path.join(
+    BASE_DIR,
+    "runs",
+    "pole_fire_wire",
+    "best_pole_fire_wire.pt"
+)
+
+print("Trying to load model from:", combined_model_path)
+
+if not os.path.exists(combined_model_path):
+    print("MODEL FILE NOT FOUND ❌")
+else:
+    print("Model file found ✅")
+
+model = YOLO(combined_model_path)
+print("Unified YOLOv8 model loaded successfully.")
+
+# try:
+#     combined_model_path = "runs/pole_fire_wire/best_pole_fire_wire.pt"
+#     model = YOLO(combined_model_path)
+#     print("Unified YOLOv8 model loaded successfully.")
+# except Exception as e:
+#     print(f"Error loading combined model: {e}")
+#     model = None
 
 # Allowed file types
 def allowed_file(filename):
@@ -187,9 +206,13 @@ RETRAIN_CONF_THRESHOLD = 0.25
 
 # NEW PREDICT ROUTE — USES ONLY ONE MODEL FOR ALL 3 TASKS
 
+
+
 @com_img_det_retrain.route('/predict', methods=['POST'])
 
 def predict():
+    if model is None:
+        return jsonify({"error": "Model not loaded"}), 500
 
     # Clear previously uploaded images
     clear_all_image_folders()
